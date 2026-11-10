@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PROSPEK — Prospect List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Shah Alam hiking-shirt palette */
+  --sand:#efe8d8; --paper:#faf6ec; --paper-2:#f3ecdb;
+  --rust:#c9502a; --rust-deep:#a53f20; --brick:#8f3a20;
+  --ink:#2e2a24; --muted:#8c8373; --line:#e3d9c5;
+  --cobalt:#3e6fa8; --gold:#d99a28; --rose:#cf7a8b; --moss:#5b7a3f; --slate:#9a8f7a;
+  --wa:#1fa855;
+
+  --bg:var(--sand); --surface:var(--paper); --surface-2:var(--paper-2);
+  --text:var(--ink); --sub:var(--muted); --border:var(--line);
+  --shadow:0 1px 0 rgba(143,58,32,.04), 0 10px 24px -18px rgba(70,44,20,.5);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sand:#211c15; --paper:#2b2519; --paper-2:#332c1f;
+    --rust:#e0693f; --rust-deep:#c9502a; --brick:#d6764d;
+    --ink:#f1e9d7; --muted:#b2a590; --line:#423a2b;
+    --cobalt:#6fa0d6; --gold:#e8b24a; --rose:#e295a5; --moss:#8fb06b; --slate:#b2a590;
+    --bg:var(--sand); --surface:var(--paper); --surface-2:var(--paper-2);
+    --text:var(--ink); --sub:var(--muted); --border:var(--line);
+    --shadow:0 10px 26px -18px rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sand:#211c15; --paper:#2b2519; --paper-2:#332c1f;
+  --rust:#e0693f; --rust-deep:#c9502a; --brick:#d6764d;
+  --ink:#f1e9d7; --muted:#b2a590; --line:#423a2b;
+  --cobalt:#6fa0d6; --gold:#e8b24a; --rose:#e295a5; --moss:#8fb06b; --slate:#b2a590;
+  --bg:var(--sand); --surface:var(--paper); --surface-2:var(--paper-2);
+  --text:var(--ink); --sub:var(--muted); --border:var(--line);
+  --shadow:0 10px 26px -18px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+:root{box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Hanken Grotesk", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-feature-settings:"tnum" 0; line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px; margin:0 auto; padding:22px 18px 80px}
+
+/* ---------- Header / event badge ---------- */
+.top{display:flex; gap:18px; align-items:center; flex-wrap:wrap; margin-bottom:18px}
+.badge{
+  position:relative; background:var(--rust); color:#fdf6e8;
+  border:3px solid #f6ecd6; border-radius:16px;
+  padding:14px 22px 16px; transform:rotate(-2.2deg);
+  box-shadow:6px 7px 0 var(--brick);
+}
+.badge h1{
+  font-family:"Anton", Impact, "Arial Narrow", sans-serif; font-weight:400;
+  margin:0; font-size:clamp(34px,8vw,52px); letter-spacing:1.5px; line-height:.9;
+}
+.badge .kick{display:block; font-size:11px; letter-spacing:4px; font-weight:700;
+  font-family:"Hanken Grotesk",sans-serif; opacity:.9; margin-bottom:2px}
+.lead{flex:1 1 240px; min-width:220px}
+.lead p{margin:0; color:var(--sub); font-size:15px; max-width:42ch}
+.lead .shout{color:var(--text); font-weight:800; font-size:17px; margin-bottom:3px;
+  font-style:italic; letter-spacing:.2px}
+
+/* stat tabs (echo the shirt's stacked tabs) */
+.stats{display:flex; gap:8px; margin:16px 0 20px; flex-wrap:wrap}
+.stat{
+  display:flex; align-items:baseline; gap:8px; color:#fff;
+  padding:7px 13px; border-radius:9px; font-weight:700; font-size:13px;
+  box-shadow:3px 3px 0 rgba(70,44,20,.18);
+}
+.stat b{font-family:"Hanken Grotesk"; font-size:19px; font-variant-numeric:tabular-nums}
+.stat.t{background:var(--rust)} .stat.h{background:var(--gold); color:#4a3410}
+.stat.i{background:var(--cobalt)}
+
+/* ---------- Toolbar ---------- */
+.toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px}
+.search{flex:1 1 220px; min-width:180px; position:relative}
+.search input{
+  width:100%; padding:11px 12px 11px 38px; border:1.5px solid var(--border);
+  background:var(--surface); color:var(--text); border-radius:11px; font:inherit; font-size:15px;
+}
+.search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--sub)}
+select, .btn{font:inherit; font-size:14px; font-weight:600}
+select{
+  padding:10px 12px; border:1.5px solid var(--border); background:var(--surface);
+  color:var(--text); border-radius:11px; cursor:pointer;
+}
+.btn{border:1.5px solid var(--border); background:var(--surface); color:var(--text);
+  padding:10px 14px; border-radius:11px; cursor:pointer; display:inline-flex; align-items:center; gap:7px}
+.btn:hover{border-color:var(--rust)}
+.btn.primary{background:var(--rust); border-color:var(--rust); color:#fdf6e8}
+.btn.primary:hover{background:var(--rust-deep); border-color:var(--rust-deep)}
+.btn.icon{padding:10px 11px}
+input:focus-visible, select:focus-visible, .btn:focus-visible, a:focus-visible, .pill:focus-visible{
+  outline:2.5px solid var(--cobalt); outline-offset:2px}
+
+/* filter chips */
+.chips{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px}
+.chip{
+  border:1.5px solid var(--border); background:var(--surface); color:var(--sub);
+  padding:5px 12px; border-radius:999px; cursor:pointer; font-weight:700; font-size:12.5px;
+}
+.chip[aria-pressed="true"]{background:var(--text); color:var(--surface); border-color:var(--text)}
+
+/* ---------- Table ---------- */
+.list{display:flex; flex-direction:column; gap:10px}
+.head{
+  display:grid; grid-template-columns:2fr 1.7fr 118px 180px 56px;
+  gap:14px; padding:4px 16px; align-items:center;
+}
+.head button{
+  all:unset; cursor:pointer; color:var(--sub); font-weight:800; font-size:11px;
+  letter-spacing:1px; text-transform:uppercase; display:inline-flex; align-items:center; gap:5px;
+}
+.head button:hover{color:var(--rust)}
+.head .arrow{opacity:0; font-size:11px; transition:opacity .12s}
+.head button[data-active="true"]{color:var(--text)}
+.head button[data-active="true"] .arrow{opacity:1; color:var(--rust)}
+.head .static{color:var(--sub); font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase}
+
+.row{
+  display:grid; grid-template-columns:2fr 1.7fr 118px 180px 56px; gap:14px;
+  align-items:center; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--radius); padding:13px 16px; box-shadow:var(--shadow);
+}
+.ident{display:flex; align-items:center; gap:12px; min-width:0}
+.avatar{
+  flex:none; width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
+  font-weight:800; font-size:14px; color:#fff; letter-spacing:.3px;
+}
+.who{min-width:0}
+.name{font-weight:700; font-size:15.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.wa{display:inline-flex; align-items:center; gap:6px; color:var(--wa); font-weight:700;
+  font-size:13.5px; text-decoration:none; font-variant-numeric:tabular-nums; margin-top:1px}
+.wa:hover{text-decoration:underline}
+.wa.empty{color:var(--sub); font-weight:500; font-style:italic}
+.wa .glyph{flex:none}
+.remarks{color:var(--sub); font-size:14px; overflow:hidden; display:-webkit-box;
+  -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2}
+
+.pill{
+  border:none; cursor:pointer; font:inherit; font-weight:800; font-size:12px; color:#fff;
+  padding:5px 11px; border-radius:999px; white-space:nowrap; letter-spacing:.2px;
+}
+.pill.none{background:transparent; color:var(--sub); border:1.5px dashed var(--border); font-weight:700}
+
+.income{display:flex; flex-direction:column; gap:5px}
+.income .lbl{font-weight:800; font-size:12.5px; font-variant-numeric:tabular-nums; cursor:pointer}
+.income .lbl .rm{color:var(--sub); font-weight:700; font-size:11px; margin-right:3px}
+.track{height:7px; border-radius:99px; background:var(--surface-2); overflow:hidden; border:1px solid var(--border)}
+.fill{height:100%; border-radius:99px; background:linear-gradient(90deg,var(--gold),var(--rust))}
+.income.none .lbl{color:var(--sub)}
+
+.rowact{display:flex; justify-content:flex-end}
+.kebab{all:unset; cursor:pointer; color:var(--sub); padding:6px 9px; border-radius:9px; line-height:1}
+.kebab:hover{background:var(--surface-2); color:var(--text)}
+
+/* empty state */
+.empty{
+  text-align:center; padding:54px 22px; border:2px dashed var(--border);
+  border-radius:18px; background:var(--surface); margin-top:6px;
+}
+.empty .em-badge{font-size:40px; margin-bottom:6px}
+.empty h3{margin:0 0 6px; font-size:19px}
+.empty p{margin:0 auto 18px; color:var(--sub); max-width:38ch}
+
+/* ---------- Modal ---------- */
+.scrim{
+  position:fixed; inset:0; background:rgba(40,28,14,.5); backdrop-filter:blur(2px);
+  display:none; align-items:flex-start; justify-content:center; padding:24px 14px; z-index:40; overflow:auto;
+}
+.scrim.on{display:flex}
+.modal{
+  width:100%; max-width:460px; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:18px; box-shadow:0 30px 60px -24px rgba(40,28,14,.7); margin-top:max(20px,env(safe-area-inset-top));
+  animation:pop .16s ease-out;
+}
+@keyframes pop{from{transform:translateY(8px) scale(.98); opacity:0}to{transform:none; opacity:1}}
+.modal header{display:flex; align-items:center; justify-content:space-between; padding:18px 20px 4px}
+.modal header h2{margin:0; font-size:20px}
+.modal .body{padding:8px 20px 20px}
+.field{margin-top:14px}
+.field label{display:block; font-weight:700; font-size:12.5px; letter-spacing:.3px; margin-bottom:6px; color:var(--sub)}
+.field input, .field textarea, .field select{
+  width:100%; padding:11px 12px; border:1.5px solid var(--border); background:var(--bg);
+  color:var(--text); border-radius:11px; font:inherit; font-size:15px;
+}
+.field textarea{resize:vertical; min-height:62px}
+.hint{font-size:12px; color:var(--sub); margin-top:5px}
+.seg{display:flex; gap:7px; flex-wrap:wrap}
+.seg button{
+  flex:1 1 auto; border:1.5px solid var(--border); background:var(--bg); color:var(--text);
+  padding:9px 6px; border-radius:10px; font:inherit; font-weight:700; font-size:13px; cursor:pointer;
+}
+.seg button[aria-pressed="true"]{color:#fff; border-color:transparent}
+.modal .actions{display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:20px}
+.del{color:var(--brick); background:transparent; border:none; cursor:pointer; font:inherit; font-weight:700; padding:8px}
+.del:hover{text-decoration:underline}
+.grow{display:flex; gap:10px; margin-left:auto}
+.x{all:unset; cursor:pointer; color:var(--sub); font-size:22px; line-height:1; padding:4px 8px; border-radius:8px}
+.x:hover{background:var(--surface-2); color:var(--text)}
+textarea.csv{width:100%; min-height:150px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;
+  border:1.5px solid var(--border); border-radius:11px; padding:11px; background:var(--bg); color:var(--text)}
+
+/* toast */
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:var(--text); color:var(--surface); padding:11px 18px; border-radius:12px;
+  font-weight:700; font-size:14px; opacity:0; pointer-events:none; transition:.2s; z-index:60;
+  box-shadow:0 14px 30px -12px rgba(0,0,0,.5); max-width:90vw; text-align:center;
+}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+
+footer{margin-top:30px; color:var(--sub); font-size:12.5px; text-align:center}
+footer button{all:unset; cursor:pointer; color:var(--rust); font-weight:700}
+#syncStatus[data-state="ok"]{color:var(--moss); font-weight:700}
+#syncStatus[data-state="busy"]{color:var(--gold); font-weight:700}
+#syncStatus[data-state="err"]{color:var(--brick); font-weight:700}
+
+/* ---------- Mobile ---------- */
+@media (max-width:720px){
+  .head{display:none}
+  .row{grid-template-columns:1fr; gap:11px; padding:15px}
+  .cell{display:flex; align-items:center; gap:10px}
+  .cell::before{content:attr(data-label); color:var(--sub); font-weight:800; font-size:11px;
+    letter-spacing:.6px; text-transform:uppercase; flex:none; width:74px}
+  .cell.ident-cell::before{display:none}
+  .remarks{-webkit-line-clamp:4; line-clamp:4}
+  .income{flex:1}
+  .rowact{position:absolute; top:12px; right:12px}
+  .row{position:relative}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="badge"><span class="kick">UNIT TRUST</span><h1>PROSPEK</h1></div>
+    <div class="lead">
+      <div class="shout">Jangan tunggu — kejar prospek.</div>
+      <p>Your prospect list. Rate each lead, estimate income, sort by priority, and tap to open WhatsApp.</p>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="search" placeholder="Search name, number or remarks…" autocomplete="off">
+    </div>
+    <label class="sr" for="sort" style="position:absolute;left:-9999px">Sort</label>
+    <select id="sort" title="Order the list">
+      <option value="attitude">Sort: Attitude (hot first)</option>
+      <option value="income">Sort: Income (high first)</option>
+      <option value="name">Sort: Name (A–Z)</option>
+      <option value="created">Sort: Recently added</option>
+    </select>
+    <button class="btn icon" id="cloudBtn" title="Online sync" aria-label="Online sync">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.2 9.2 3.8 3.8 0 0 0 6.5 19z"/><path d="M12 12v6"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg>
+    </button>
+    <button class="btn icon" id="menuBtn" title="Export / import" aria-label="Export or import">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+    </button>
+    <button class="btn primary" id="addBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Add prospect
+    </button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="head" id="head">
+    <button data-sort="name"><span>Prospect</span><span class="arrow">▾</span></button>
+    <span class="static">Remarks</span>
+    <button data-sort="attitude"><span>Attitude</span><span class="arrow">▾</span></button>
+    <button data-sort="income"><span>Income est.</span><span class="arrow">▾</span></button>
+    <span></span>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <footer>
+    <span id="syncStatus">Saved privately in this browser</span> · <span id="count">0</span> prospects ·
+    <button id="themeToggle">switch theme</button>
+  </footer>
+</div>
+
+<!-- Add / edit modal -->
+<div class="scrim" id="scrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <header><h2 id="mTitle">Add prospect</h2><button class="x" id="mClose" aria-label="Close">×</button></header>
+    <div class="body">
+      <div class="field">
+        <label for="fName">Name</label>
+        <input id="fName" type="text" placeholder="e.g. Nurul Aina" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fPhone">WhatsApp number</label>
+        <input id="fPhone" type="tel" placeholder="e.g. 019-706 5328" autocomplete="off" inputmode="tel">
+        <div class="hint">Malaysian numbers auto-format to +60 for the WhatsApp link.</div>
+      </div>
+      <div class="field">
+        <label>Attitude</label>
+        <div class="seg" id="fAttitude"></div>
+      </div>
+      <div class="field">
+        <label>Income estimate (monthly)</label>
+        <div class="seg" id="fIncome"></div>
+      </div>
+      <div class="field">
+        <label for="fRemarks">Remarks</label>
+        <textarea id="fRemarks" placeholder="Follow-up notes, referral source, products discussed…"></textarea>
+      </div>
+      <div class="actions">
+        <button class="del" id="mDelete" hidden>Delete</button>
+        <div class="grow">
+          <button class="btn" id="mCancel">Cancel</button>
+          <button class="btn primary" id="mSave">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export / import modal -->
+<div class="scrim" id="ioScrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ioTitle">
+    <header><h2 id="ioTitle">Export &amp; import</h2><button class="x" id="ioClose" aria-label="Close">×</button></header>
+    <div class="body">
+      <p class="hint" style="margin-top:0">Back up your list or move it to another device. Export a CSV, then paste it back in here on the other browser.</p>
+      <div class="actions" style="margin-top:12px; justify-content:flex-start; gap:10px">
+        <button class="btn primary" id="doExport">Export CSV</button>
+        <button class="btn" id="doCopy">Copy CSV</button>
+      </div>
+      <div class="field" style="margin-top:20px">
+        <label for="csvIn">Import — paste CSV and merge</label>
+        <textarea class="csv" id="csvIn" placeholder="Name,Phone,Remarks,Attitude,Income&#10;Nurul Aina,0197065328,Referral from Aqil,Hot,5–8k"></textarea>
+        <div class="hint">Expects columns: Name, Phone, Remarks, Attitude, Income. New rows are added to your list.</div>
+      </div>
+      <div class="actions" style="justify-content:flex-end">
+        <button class="btn primary" id="doImport">Import rows</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Online sync modal -->
+<div class="scrim" id="cloudScrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="clTitle">
+    <header><h2 id="clTitle">Online sync</h2><button class="x" id="clClose" aria-label="Close">×</button></header>
+    <div class="body">
+      <p class="hint" style="margin-top:0">Sync your list across devices through your own Google Sheet. Paste the Web App URL and token from your Apps Script (setup is in the README). These are saved on this device only — never in your repo.</p>
+      <div class="field">
+        <label for="clUrl">Web App URL</label>
+        <input id="clUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="clToken">Token</label>
+        <input id="clToken" type="text" placeholder="your secret token" autocomplete="off">
+      </div>
+      <div class="actions" style="justify-content:flex-start; gap:10px; flex-wrap:wrap; margin-top:16px">
+        <button class="btn" id="clTest">Test &amp; save</button>
+        <button class="btn" id="clPull">Pull from sheet</button>
+        <button class="btn primary" id="clPush">Push all to sheet</button>
+      </div>
+      <p class="hint" id="clMsg" style="min-height:18px; margin-top:12px"></p>
+      <div class="actions" style="justify-content:space-between">
+        <button class="del" id="clDisconnect" hidden>Disconnect</button>
+        <div class="grow"><button class="btn" id="clDone">Done</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const KEY = "prospek.v1";
+
+const ATT = [
+  {k:"cold", label:"Cold", color:"var(--slate)",  v:1},
+  {k:"cool", label:"Cool", color:"var(--cobalt)", v:2},
+  {k:"warm", label:"Warm", color:"var(--gold)",   v:3},
+  {k:"hot",  label:"Hot",  color:"var(--rust)",   v:4},
+];
+const INC = [
+  {k:"u3",  label:"< 3k",  v:1, pct:20},
+  {k:"3_5", label:"3–5k",  v:2, pct:40},
+  {k:"5_8", label:"5–8k",  v:3, pct:60},
+  {k:"8_12",label:"8–12k", v:4, pct:80},
+  {k:"12",  label:"12k+",  v:5, pct:100},
+];
+const attBy = k => ATT.find(a=>a.k===k);
+const incBy = k => INC.find(i=>i.k===k);
+
+let data = load();
+let sortKey = "attitude", sortDir = "desc", filter = "all", query = "";
+let editId = null;
+
+/* ---- cloud sync config (Google Sheet via Apps Script) ---- */
+const CKEY = "prospek.cloud";
+let cloud = (()=>{ try{ return JSON.parse(localStorage.getItem(CKEY))||{}; }catch{ return {}; } })();
+let pulled = false;   // has this session safely pulled the sheet yet?
+let pushT = null;     // debounce timer for pushes
+const cloudOn = () => !!(cloud.url && cloud.token);
+
+function load(){
+  try{ const r = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(r)?r:[]; }
+  catch{ return []; }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(data)); }
+  catch{ toast("Couldn’t save — browser storage is blocked."); }
+  // mirror to the sheet, debounced — only once this session has safely pulled
+  if(cloudOn() && pulled){ clearTimeout(pushT); pushT=setTimeout(pushAll,700); }
+}
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---- cloud API ---- */
+function setSync(text, state){ const el=$("#syncStatus"); if(el){ el.textContent=text; el.dataset.state=state||""; } }
+async function apiGet(){
+  const u = cloud.url + (cloud.url.includes("?")?"&":"?") + "action=list&token=" + encodeURIComponent(cloud.token);
+  const res = await fetch(u, {method:"GET"});
+  const j = await res.json();
+  if(!j.ok) throw new Error(j.error||"error");
+  return j.rows||[];
+}
+async function apiPost(payload){
+  payload.token = cloud.token;
+  const res = await fetch(cloud.url, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload)});
+  const j = await res.json();
+  if(!j.ok) throw new Error(j.error||"error");
+  return j;
+}
+function normRows(rows){
+  return rows.map(r=>({id:String(r.id),name:r.name||"",phone:String(r.phone||""),remarks:r.remarks||"",attitude:r.attitude||"",income:r.income||"",created:Number(r.created)||0}));
+}
+async function pull(force){
+  if(!cloudOn()) return;
+  setSync("Syncing…","busy");
+  try{
+    const rows = await apiGet();
+    // safety: don't let an empty sheet wipe a non-empty local list unless forced
+    if(!force && rows.length===0 && data.length>0){ pulled=false; setSync("Sheet empty — open Sync to push","err"); return; }
+    data = normRows(rows);
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch{}
+    pulled = true; render(); setSync("Synced ✓","ok");
+  }catch(e){ setSync("Offline — using local copy","err"); }
+}
+async function pushAll(){
+  if(!cloudOn()) return;
+  setSync("Syncing…","busy");
+  try{ await apiPost({action:"replace", rows:data}); setSync("Synced ✓","ok"); }
+  catch(e){ setSync("Not synced — will retry","err"); }
+}
+
+/* WhatsApp link: normalise to international (default Malaysia +60) */
+function waNumber(raw){
+  let d = (raw||"").replace(/\D/g,"");
+  if(!d) return "";
+  if(d.startsWith("60")) return d;
+  if(d.startsWith("0")) return "60"+d.slice(1);
+  return "60"+d;
+}
+function initials(name){
+  const p = (name||"").trim().split(/\s+/).filter(Boolean);
+  if(!p.length) return "–";
+  return (p[0][0] + (p[1]?p[1][0]:"")).toUpperCase();
+}
+const AV = ["var(--rust)","var(--cobalt)","var(--moss)","var(--rose)","var(--gold)","var(--brick)"];
+function avColor(id){ let h=0; for(const c of id) h=(h*31+c.charCodeAt(0))>>>0; return AV[h%AV.length]; }
+
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- render ---------- */
+function visible(){
+  let rows = data.slice();
+  if(filter!=="all") rows = rows.filter(r=>r.attitude===filter);
+  if(query){
+    const q = query.toLowerCase();
+    rows = rows.filter(r =>
+      (r.name||"").toLowerCase().includes(q) ||
+      (r.phone||"").toLowerCase().includes(q) ||
+      (r.remarks||"").toLowerCase().includes(q));
+  }
+  const dir = sortDir==="asc"?1:-1;
+  rows.sort((a,b)=>{
+    let x,y;
+    if(sortKey==="name"){ return (a.name||"").localeCompare(b.name||"")* (sortDir==="asc"?1:-1); }
+    if(sortKey==="attitude"){ x=attBy(a.attitude)?.v||0; y=attBy(b.attitude)?.v||0; }
+    else if(sortKey==="income"){ x=incBy(a.income)?.v||0; y=incBy(b.income)?.v||0; }
+    else { x=a.created||0; y=b.created||0; }
+    return (x-y)*dir;
+  });
+  return rows;
+}
+
+function render(){
+  // stats
+  const hot = data.filter(r=>r.attitude==="hot").length;
+  const high = data.filter(r=>incBy(r.income)?.v>=4).length;
+  $("#stats").innerHTML =
+    `<span class="stat t"><b>${data.length}</b> prospects</span>`+
+    `<span class="stat h"><b>${hot}</b> hot leads</span>`+
+    `<span class="stat i"><b>${high}</b> high income</span>`;
+  $("#count").textContent = data.length;
+
+  // filter chips
+  const counts = {all:data.length};
+  ATT.forEach(a=> counts[a.k]=data.filter(r=>r.attitude===a.k).length);
+  const chip = (k,label)=>`<button class="chip" data-f="${k}" aria-pressed="${filter===k}">${label} ${counts[k]?`· ${counts[k]}`:""}</button>`;
+  $("#chips").innerHTML = chip("all","All") + ATT.slice().reverse().map(a=>chip(a.k,a.label)).join("");
+
+  // header sort indicators
+  $("#head").querySelectorAll("button[data-sort]").forEach(b=>{
+    const on = b.dataset.sort===sortKey;
+    b.dataset.active = on;
+    b.querySelector(".arrow").textContent = (on && sortDir==="asc") ? "▴" : "▾";
+  });
+
+  const rows = visible();
+  const list = $("#list");
+  if(!data.length){
+    list.innerHTML = `<div class="empty">
+      <div class="em-badge">📇</div>
+      <h3>No prospects yet</h3>
+      <p>Add your first lead and start building your pipeline. Everything stays on this device.</p>
+      <button class="btn primary" onclick="openAdd()">Add your first prospect</button>
+    </div>`;
+    return;
+  }
+  if(!rows.length){
+    list.innerHTML = `<div class="empty"><div class="em-badge">🔍</div><h3>No matches</h3><p>Nothing fits that search or filter. Clear it to see your full list.</p></div>`;
+    return;
+  }
+  list.innerHTML = rows.map(rowHTML).join("");
+}
+
+function rowHTML(r){
+  const wa = waNumber(r.phone);
+  const a = attBy(r.attitude), i = incBy(r.income);
+  const phoneCell = wa
+    ? `<a class="wa" href="https://wa.me/${wa}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+         <span class="glyph">${waGlyph()}</span>${esc(r.phone)}</a>`
+    : `<span class="wa empty">no number</span>`;
+  const attCell = a
+    ? `<button class="pill" style="background:${a.color}" data-cycle="att" data-id="${r.id}" title="Tap to change">${a.label}</button>`
+    : `<button class="pill none" data-cycle="att" data-id="${r.id}">— set</button>`;
+  const incCell = i
+    ? `<div class="income">
+         <span class="lbl" data-cycle="inc" data-id="${r.id}" title="Tap to change"><span class="rm">RM</span>${i.label}</span>
+         <div class="track"><div class="fill" style="width:${i.pct}%"></div></div>
+       </div>`
+    : `<div class="income none"><span class="lbl" data-cycle="inc" data-id="${r.id}">— set income</span>
+         <div class="track"><div class="fill" style="width:0"></div></div></div>`;
+
+  return `<div class="row" data-id="${r.id}">
+    <div class="cell ident-cell ident">
+      <div class="avatar" style="background:${avColor(r.id)}">${esc(initials(r.name))}</div>
+      <div class="who">
+        <div class="name">${esc(r.name)||"Unnamed"}</div>
+        ${phoneCell}
+      </div>
+    </div>
+    <div class="cell remarks" data-label="Remarks">${esc(r.remarks)|| '<span style="opacity:.6">—</span>'}</div>
+    <div class="cell" data-label="Attitude">${attCell}</div>
+    <div class="cell" data-label="Income">${incCell}</div>
+    <div class="rowact">
+      <button class="kebab" data-edit="${r.id}" aria-label="Edit ${esc(r.name)||'prospect'}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+function waGlyph(){
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.3-.4A8 8 0 0 1 12 4zm-2.7 4c-.2 0-.5 0-.7.3-.3.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3l-1.5-.8c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1-.6-.3-1.4-.6-2.2-1.4-.6-.6-1-1.3-1.2-1.5-.1-.2 0-.3.1-.5l.4-.5c.1-.1.1-.3.2-.4 0-.2 0-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.5h-.5z"/></svg>`;
+}
+
+/* ---------- modal ---------- */
+function buildSegs(){
+  $("#fAttitude").innerHTML = ATT.slice().reverse().map(a=>
+    `<button type="button" data-att="${a.k}" style="--c:${a.color}">${a.label}</button>`).join("");
+  $("#fIncome").innerHTML = INC.map(i=>
+    `<button type="button" data-inc="${i.k}">${i.label}</button>`).join("");
+}
+let formAtt="warm", formInc="3_5";
+function paintSegs(){
+  $("#fAttitude").querySelectorAll("button").forEach(b=>{
+    const on = b.dataset.att===formAtt;
+    b.setAttribute("aria-pressed", on);
+    b.style.background = on ? attBy(b.dataset.att).color : "";
+  });
+  $("#fIncome").querySelectorAll("button").forEach(b=>{
+    const on = b.dataset.inc===formInc;
+    b.setAttribute("aria-pressed", on);
+    b.style.background = on ? "var(--rust)" : "";
+  });
+}
+window.openAdd = function(){
+  editId=null; formAtt="warm"; formInc="3_5";
+  $("#mTitle").textContent="Add prospect";
+  $("#fName").value=""; $("#fPhone").value=""; $("#fRemarks").value="";
+  $("#mDelete").hidden=true;
+  paintSegs(); $("#scrim").classList.add("on"); setTimeout(()=>$("#fName").focus(),40);
+};
+function openEdit(id){
+  const r = data.find(x=>x.id===id); if(!r) return;
+  editId=id; formAtt=r.attitude||"warm"; formInc=r.income||"3_5";
+  $("#mTitle").textContent="Edit prospect";
+  $("#fName").value=r.name||""; $("#fPhone").value=r.phone||""; $("#fRemarks").value=r.remarks||"";
+  $("#mDelete").hidden=false;
+  paintSegs(); $("#scrim").classList.add("on"); setTimeout(()=>$("#fName").focus(),40);
+}
+function closeModal(){ $("#scrim").classList.remove("on"); }
+function saveForm(){
+  const name=$("#fName").value.trim();
+  const phone=$("#fPhone").value.trim();
+  if(!name && !phone){ toast("Add a name or a number first."); return; }
+  if(editId){
+    const r=data.find(x=>x.id===editId);
+    Object.assign(r,{name,phone,remarks:$("#fRemarks").value.trim(),attitude:formAtt,income:formInc});
+  }else{
+    data.push({id:uid(),name,phone,remarks:$("#fRemarks").value.trim(),attitude:formAtt,income:formInc,created:Date.now()});
+  }
+  save(); closeModal(); render();
+  toast(editId?"Saved.":"Prospect added.");
+}
+function delForm(){
+  if(!editId) return;
+  data = data.filter(x=>x.id!==editId);
+  save(); closeModal(); render(); toast("Deleted.");
+}
+
+/* cycle attitude / income by tapping the pill */
+function cycle(kind,id){
+  const r=data.find(x=>x.id===id); if(!r) return;
+  if(kind==="att"){ const idx=ATT.findIndex(a=>a.k===r.attitude); r.attitude=ATT[(idx+1+ATT.length)%ATT.length].k; }
+  else{ const idx=INC.findIndex(i=>i.k===r.income); r.income=INC[(idx+1+INC.length)%INC.length].k; }
+  save(); render();
+}
+
+/* ---------- export / import ---------- */
+function toCSV(){
+  const header=["Name","Phone","Remarks","Attitude","Income"];
+  const q=s=>{ s=(s??"").toString(); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  const lines=[header.join(",")];
+  data.forEach(r=>lines.push([r.name,r.phone,r.remarks,attBy(r.attitude)?.label||"",incBy(r.income)?.label||""].map(q).join(",")));
+  return lines.join("\n");
+}
+function parseCSV(text){
+  const rows=[]; let f="",row=[],inq=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inq){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else inq=false; } else f+=c; }
+    else{ if(c==='"') inq=true; else if(c===","){row.push(f);f="";}
+      else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n")i++; row.push(f); rows.push(row); row=[]; f=""; }
+      else f+=c; }
+  }
+  if(f.length||row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r=>r.some(c=>c.trim()!==""));
+}
+function matchAtt(s){ s=(s||"").trim().toLowerCase(); return ATT.find(a=>a.label.toLowerCase()===s||a.k===s)?.k||"warm"; }
+function matchInc(s){ s=(s||"").trim().toLowerCase().replace(/rm\s*/,"").replace(/\s/g,""); 
+  return INC.find(i=>i.label.toLowerCase().replace(/\s/g,"")===s||i.k===s)?.k || (s?"3_5":"3_5"); }
+function importCSV(){
+  const rows=parseCSV($("#csvIn").value);
+  if(!rows.length){ toast("Nothing to import."); return; }
+  let start=0;
+  const first=rows[0].map(c=>c.trim().toLowerCase());
+  if(first.includes("name")||first.includes("phone")) start=1;
+  let n=0;
+  for(let i=start;i<rows.length;i++){
+    const [name="",phone="",remarks="",att="",inc=""]=rows[i];
+    if(!name.trim()&&!phone.trim()) continue;
+    data.push({id:uid(),name:name.trim(),phone:phone.trim(),remarks:remarks.trim(),
+      attitude:matchAtt(att),income:matchInc(inc),created:Date.now()+i});
+    n++;
+  }
+  save(); render(); $("#csvIn").value=""; $("#ioScrim").classList.remove("on");
+  toast(n+" row"+(n===1?"":"s")+" imported.");
+}
+function exportCSV(){
+  const csv=toCSV(); const name="prospek-"+new Date().toISOString().slice(0,10)+".csv";
+  try{
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download=name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast("Export ready — check your downloads.");
+  }catch(e){ copyCSV(true); }
+}
+async function copyCSV(fromExport){
+  try{ await navigator.clipboard.writeText(toCSV());
+    toast(fromExport?"Download unavailable — CSV copied instead.":"CSV copied to clipboard."); }
+  catch{ toast("Couldn’t copy — select the text manually."); }
+}
+
+/* ---------- events ---------- */
+let toastT;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2200); }
+
+$("#addBtn").addEventListener("click", openAdd);
+$("#mClose").addEventListener("click", closeModal);
+$("#mCancel").addEventListener("click", closeModal);
+$("#mSave").addEventListener("click", saveForm);
+$("#mDelete").addEventListener("click", delForm);
+$("#scrim").addEventListener("click", e=>{ if(e.target===$("#scrim")) closeModal(); });
+$("#fAttitude").addEventListener("click", e=>{ const b=e.target.closest("[data-att]"); if(b){formAtt=b.dataset.att; paintSegs();} });
+$("#fIncome").addEventListener("click", e=>{ const b=e.target.closest("[data-inc]"); if(b){formInc=b.dataset.inc; paintSegs();} });
+
+$("#list").addEventListener("click", e=>{
+  const cyc=e.target.closest("[data-cycle]");
+  if(cyc){ e.stopPropagation(); cycle(cyc.dataset.cycle==="att"?"att":"inc", cyc.dataset.id); return; }
+  const ed=e.target.closest("[data-edit]");
+  if(ed){ openEdit(ed.dataset.edit); return; }
+  const row=e.target.closest(".row");
+  if(row && !e.target.closest("a")) openEdit(row.dataset.id);
+});
+
+$("#chips").addEventListener("click", e=>{ const c=e.target.closest(".chip"); if(c){ filter=c.dataset.f; render(); } });
+$("#head").addEventListener("click", e=>{
+  const b=e.target.closest("[data-sort]"); if(!b) return;
+  const k=b.dataset.sort;
+  if(sortKey===k) sortDir = sortDir==="asc"?"desc":"asc";
+  else { sortKey=k; sortDir = k==="name"?"asc":"desc"; }
+  syncSortSelect(); render();
+});
+$("#sort").addEventListener("change", e=>{
+  sortKey=e.target.value; sortDir = sortKey==="name"?"asc":"desc"; render();
+});
+function syncSortSelect(){ if(["attitude","income","name","created"].includes(sortKey)) $("#sort").value=sortKey; }
+
+let qT;
+$("#q").addEventListener("input", e=>{ clearTimeout(qT); qT=setTimeout(()=>{ query=e.target.value.trim(); render(); },120); });
+
+$("#menuBtn").addEventListener("click", ()=>$("#ioScrim").classList.add("on"));
+$("#ioClose").addEventListener("click", ()=>$("#ioScrim").classList.remove("on"));
+$("#ioScrim").addEventListener("click", e=>{ if(e.target===$("#ioScrim")) $("#ioScrim").classList.remove("on"); });
+$("#doExport").addEventListener("click", exportCSV);
+$("#doCopy").addEventListener("click", ()=>copyCSV(false));
+$("#doImport").addEventListener("click", importCSV);
+
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeModal(); $("#ioScrim").classList.remove("on"); $("#cloudScrim").classList.remove("on"); } });
+
+/* theme toggle */
+(function(){
+  const saved = (()=>{ try{return localStorage.getItem("prospek.theme")}catch{return null} })();
+  if(saved) document.documentElement.setAttribute("data-theme", saved);
+  $("#themeToggle").addEventListener("click", ()=>{
+    const cur = document.documentElement.getAttribute("data-theme");
+    const dark = cur ? cur==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = dark ? "light":"dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try{ localStorage.setItem("prospek.theme", next); }catch{}
+  });
+})();
+
+buildSegs();
+render();
+
+/* ---- cloud: settings modal + startup ---- */
+function openCloud(){
+  $("#clUrl").value = cloud.url||"";
+  $("#clToken").value = cloud.token||"";
+  $("#clDisconnect").hidden = !cloudOn();
+  $("#clMsg").textContent = "";
+  $("#cloudScrim").classList.add("on");
+}
+function readCloudFields(){
+  cloud = {url:$("#clUrl").value.trim(), token:$("#clToken").value.trim()};
+  try{ localStorage.setItem(CKEY, JSON.stringify(cloud)); }catch{}
+}
+$("#cloudBtn").addEventListener("click", openCloud);
+$("#clClose").addEventListener("click", ()=>$("#cloudScrim").classList.remove("on"));
+$("#clDone").addEventListener("click", ()=>$("#cloudScrim").classList.remove("on"));
+$("#cloudScrim").addEventListener("click", e=>{ if(e.target===$("#cloudScrim")) $("#cloudScrim").classList.remove("on"); });
+
+$("#clTest").addEventListener("click", async ()=>{
+  readCloudFields();
+  if(!cloudOn()){ $("#clMsg").textContent="Enter both the URL and token first."; return; }
+  $("#clMsg").textContent="Testing…";
+  try{ await apiGet(); $("#clMsg").textContent="Connected ✓ Saved on this device."; $("#clDisconnect").hidden=false; setSync("Synced ✓","ok"); }
+  catch(e){ $("#clMsg").textContent="Couldn’t connect — check the URL/token and that the Web App is deployed to “Anyone”."; }
+});
+$("#clPull").addEventListener("click", async ()=>{
+  readCloudFields();
+  if(!cloudOn()){ $("#clMsg").textContent="Enter the URL and token first."; return; }
+  $("#clMsg").textContent="Pulling…";
+  try{ await pull(true); $("#clMsg").textContent="Pulled "+data.length+" rows from the sheet."; $("#clDisconnect").hidden=false; }
+  catch(e){ $("#clMsg").textContent="Pull failed."; }
+});
+$("#clPush").addEventListener("click", async ()=>{
+  readCloudFields();
+  if(!cloudOn()){ $("#clMsg").textContent="Enter the URL and token first."; return; }
+  if(!confirm("Replace the sheet’s contents with your "+data.length+" local prospects?")) return;
+  $("#clMsg").textContent="Pushing…";
+  try{ await apiPost({action:"replace", rows:data}); pulled=true; $("#clDisconnect").hidden=false; $("#clMsg").textContent="Pushed "+data.length+" rows. Sync is on."; setSync("Synced ✓","ok"); }
+  catch(e){ $("#clMsg").textContent="Push failed — check the URL/token."; }
+});
+$("#clDisconnect").addEventListener("click", ()=>{
+  cloud={}; pulled=false; try{ localStorage.removeItem(CKEY); }catch{}
+  $("#clUrl").value=""; $("#clToken").value=""; $("#clDisconnect").hidden=true;
+  $("#clMsg").textContent="Disconnected. This device is local-only now.";
+  setSync("Saved privately in this browser","");
+});
+
+// startup + keep devices fresh
+if(cloudOn()){ pull(); }
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && cloudOn()) pull(); });
+window.addEventListener("online", ()=>{ if(cloudOn()) pull(); });
+</script>
+</body>
+</html>
