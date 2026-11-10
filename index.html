@@ -227,6 +227,9 @@ textarea.csv{width:100%; min-height:150px; font-family:ui-monospace,Menlo,Consol
 
 footer{margin-top:30px; color:var(--sub); font-size:12.5px; text-align:center}
 footer button{all:unset; cursor:pointer; color:var(--rust); font-weight:700}
+#syncStatus[data-state="ok"]{color:var(--moss); font-weight:700}
+#syncStatus[data-state="busy"]{color:var(--gold); font-weight:700}
+#syncStatus[data-state="err"]{color:var(--brick); font-weight:700}
 
 /* ---------- Mobile ---------- */
 @media (max-width:720px){
@@ -269,6 +272,9 @@ footer button{all:unset; cursor:pointer; color:var(--rust); font-weight:700}
       <option value="name">Sort: Name (A–Z)</option>
       <option value="created">Sort: Recently added</option>
     </select>
+    <button class="btn icon" id="cloudBtn" title="Online sync" aria-label="Online sync">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.2 9.2 3.8 3.8 0 0 0 6.5 19z"/><path d="M12 12v6"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg>
+    </button>
     <button class="btn icon" id="menuBtn" title="Export / import" aria-label="Export or import">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
     </button>
@@ -291,7 +297,7 @@ footer button{all:unset; cursor:pointer; color:var(--rust); font-weight:700}
   <div class="list" id="list"></div>
 
   <footer>
-    Saved privately in this browser · <span id="count">0</span> prospects ·
+    <span id="syncStatus">Saved privately in this browser</span> · <span id="count">0</span> prospects ·
     <button id="themeToggle">switch theme</button>
   </footer>
 </div>
@@ -355,6 +361,34 @@ footer button{all:unset; cursor:pointer; color:var(--rust); font-weight:700}
   </div>
 </div>
 
+<!-- Online sync modal -->
+<div class="scrim" id="cloudScrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="clTitle">
+    <header><h2 id="clTitle">Online sync</h2><button class="x" id="clClose" aria-label="Close">×</button></header>
+    <div class="body">
+      <p class="hint" style="margin-top:0">Sync your list across devices through your own Google Sheet. Paste the Web App URL and token from your Apps Script (setup is in the README). These are saved on this device only — never in your repo.</p>
+      <div class="field">
+        <label for="clUrl">Web App URL</label>
+        <input id="clUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="clToken">Token</label>
+        <input id="clToken" type="text" placeholder="your secret token" autocomplete="off">
+      </div>
+      <div class="actions" style="justify-content:flex-start; gap:10px; flex-wrap:wrap; margin-top:16px">
+        <button class="btn" id="clTest">Test &amp; save</button>
+        <button class="btn" id="clPull">Pull from sheet</button>
+        <button class="btn primary" id="clPush">Push all to sheet</button>
+      </div>
+      <p class="hint" id="clMsg" style="min-height:18px; margin-top:12px"></p>
+      <div class="actions" style="justify-content:space-between">
+        <button class="del" id="clDisconnect" hidden>Disconnect</button>
+        <div class="grow"><button class="btn" id="clDone">Done</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -382,6 +416,13 @@ let data = load();
 let sortKey = "attitude", sortDir = "desc", filter = "all", query = "";
 let editId = null;
 
+/* ---- cloud sync config (Google Sheet via Apps Script) ---- */
+const CKEY = "prospek.cloud";
+let cloud = (()=>{ try{ return JSON.parse(localStorage.getItem(CKEY))||{}; }catch{ return {}; } })();
+let pulled = false;   // has this session safely pulled the sheet yet?
+let pushT = null;     // debounce timer for pushes
+const cloudOn = () => !!(cloud.url && cloud.token);
+
 function load(){
   try{ const r = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(r)?r:[]; }
   catch{ return []; }
@@ -389,8 +430,48 @@ function load(){
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(data)); }
   catch{ toast("Couldn’t save — browser storage is blocked."); }
+  // mirror to the sheet, debounced — only once this session has safely pulled
+  if(cloudOn() && pulled){ clearTimeout(pushT); pushT=setTimeout(pushAll,700); }
 }
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---- cloud API ---- */
+function setSync(text, state){ const el=$("#syncStatus"); if(el){ el.textContent=text; el.dataset.state=state||""; } }
+async function apiGet(){
+  const u = cloud.url + (cloud.url.includes("?")?"&":"?") + "action=list&token=" + encodeURIComponent(cloud.token);
+  const res = await fetch(u, {method:"GET"});
+  const j = await res.json();
+  if(!j.ok) throw new Error(j.error||"error");
+  return j.rows||[];
+}
+async function apiPost(payload){
+  payload.token = cloud.token;
+  const res = await fetch(cloud.url, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload)});
+  const j = await res.json();
+  if(!j.ok) throw new Error(j.error||"error");
+  return j;
+}
+function normRows(rows){
+  return rows.map(r=>({id:String(r.id),name:r.name||"",phone:String(r.phone||""),remarks:r.remarks||"",attitude:r.attitude||"",income:r.income||"",created:Number(r.created)||0}));
+}
+async function pull(force){
+  if(!cloudOn()) return;
+  setSync("Syncing…","busy");
+  try{
+    const rows = await apiGet();
+    // safety: don't let an empty sheet wipe a non-empty local list unless forced
+    if(!force && rows.length===0 && data.length>0){ pulled=false; setSync("Sheet empty — open Sync to push","err"); return; }
+    data = normRows(rows);
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch{}
+    pulled = true; render(); setSync("Synced ✓","ok");
+  }catch(e){ setSync("Offline — using local copy","err"); }
+}
+async function pushAll(){
+  if(!cloudOn()) return;
+  setSync("Syncing…","busy");
+  try{ await apiPost({action:"replace", rows:data}); setSync("Synced ✓","ok"); }
+  catch(e){ setSync("Not synced — will retry","err"); }
+}
 
 /* WhatsApp link: normalise to international (default Malaysia +60) */
 function waNumber(raw){
@@ -680,7 +761,7 @@ $("#doExport").addEventListener("click", exportCSV);
 $("#doCopy").addEventListener("click", ()=>copyCSV(false));
 $("#doImport").addEventListener("click", importCSV);
 
-document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeModal(); $("#ioScrim").classList.remove("on"); } });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeModal(); $("#ioScrim").classList.remove("on"); $("#cloudScrim").classList.remove("on"); } });
 
 /* theme toggle */
 (function(){
@@ -697,6 +778,57 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeModal(); $(
 
 buildSegs();
 render();
+
+/* ---- cloud: settings modal + startup ---- */
+function openCloud(){
+  $("#clUrl").value = cloud.url||"";
+  $("#clToken").value = cloud.token||"";
+  $("#clDisconnect").hidden = !cloudOn();
+  $("#clMsg").textContent = "";
+  $("#cloudScrim").classList.add("on");
+}
+function readCloudFields(){
+  cloud = {url:$("#clUrl").value.trim(), token:$("#clToken").value.trim()};
+  try{ localStorage.setItem(CKEY, JSON.stringify(cloud)); }catch{}
+}
+$("#cloudBtn").addEventListener("click", openCloud);
+$("#clClose").addEventListener("click", ()=>$("#cloudScrim").classList.remove("on"));
+$("#clDone").addEventListener("click", ()=>$("#cloudScrim").classList.remove("on"));
+$("#cloudScrim").addEventListener("click", e=>{ if(e.target===$("#cloudScrim")) $("#cloudScrim").classList.remove("on"); });
+
+$("#clTest").addEventListener("click", async ()=>{
+  readCloudFields();
+  if(!cloudOn()){ $("#clMsg").textContent="Enter both the URL and token first."; return; }
+  $("#clMsg").textContent="Testing…";
+  try{ await apiGet(); $("#clMsg").textContent="Connected ✓ Saved on this device."; $("#clDisconnect").hidden=false; setSync("Synced ✓","ok"); }
+  catch(e){ $("#clMsg").textContent="Couldn’t connect — check the URL/token and that the Web App is deployed to “Anyone”."; }
+});
+$("#clPull").addEventListener("click", async ()=>{
+  readCloudFields();
+  if(!cloudOn()){ $("#clMsg").textContent="Enter the URL and token first."; return; }
+  $("#clMsg").textContent="Pulling…";
+  try{ await pull(true); $("#clMsg").textContent="Pulled "+data.length+" rows from the sheet."; $("#clDisconnect").hidden=false; }
+  catch(e){ $("#clMsg").textContent="Pull failed."; }
+});
+$("#clPush").addEventListener("click", async ()=>{
+  readCloudFields();
+  if(!cloudOn()){ $("#clMsg").textContent="Enter the URL and token first."; return; }
+  if(!confirm("Replace the sheet’s contents with your "+data.length+" local prospects?")) return;
+  $("#clMsg").textContent="Pushing…";
+  try{ await apiPost({action:"replace", rows:data}); pulled=true; $("#clDisconnect").hidden=false; $("#clMsg").textContent="Pushed "+data.length+" rows. Sync is on."; setSync("Synced ✓","ok"); }
+  catch(e){ $("#clMsg").textContent="Push failed — check the URL/token."; }
+});
+$("#clDisconnect").addEventListener("click", ()=>{
+  cloud={}; pulled=false; try{ localStorage.removeItem(CKEY); }catch{}
+  $("#clUrl").value=""; $("#clToken").value=""; $("#clDisconnect").hidden=true;
+  $("#clMsg").textContent="Disconnected. This device is local-only now.";
+  setSync("Saved privately in this browser","");
+});
+
+// startup + keep devices fresh
+if(cloudOn()){ pull(); }
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && cloudOn()) pull(); });
+window.addEventListener("online", ()=>{ if(cloudOn()) pull(); });
 </script>
 </body>
 </html>
